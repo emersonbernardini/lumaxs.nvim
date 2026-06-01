@@ -1,0 +1,1 @@
+require("lumaxs").load("cinder")

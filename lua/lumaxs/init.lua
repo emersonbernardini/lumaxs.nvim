@@ -115,4 +115,32 @@ function M.load(name)
 	end
 end
 
+M.themes = (function()
+	local result = {}
+	local seen = {}
+	local rtp = vim.api.nvim_get_runtime_file("colors/lumaxs-*.lua", true)
+	for _, path in ipairs(rtp) do
+		local name = path:match("lumaxs%-(.+)%.lua$")
+		if name and not seen[name] then
+			seen[name] = true
+			table.insert(result, name)
+		end
+	end
+	table.sort(result)
+	return result
+end)()
+
+vim.api.nvim_create_user_command("LumaxsThemes", function()
+	print(table.concat(require("lumaxs").themes, "\n"))
+end, {})
+
+vim.api.nvim_create_user_command("LumaxsLoad", function(opts)
+	require("lumaxs").load(opts.args)
+end, {
+	nargs = 1,
+	complete = function()
+		return require("lumaxs").themes
+	end,
+})
+
 return M

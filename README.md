@@ -84,7 +84,7 @@
 
 ```lua
 {
-  "lumaXs/lumaxs.nvim",
+  "emersonbernardini/lumaxs.nvim",
   lazy = false,
   priority = 1000,
   config = function()
@@ -97,7 +97,7 @@
 
 ```lua
 use {
-  "lumaXs/lumaxs.nvim",
+  "emersonbernardini/lumaxs.nvim",
   config = function()
     vim.cmd.colorscheme("lumaxs-glacier")
   end,
@@ -108,12 +108,12 @@ use {
 
 ```vim
 " vim-plug
-Plug 'lumaXs/lumaxs.nvim'
+Plug 'emersonbernardini/lumaxs.nvim'
 ```
 
 ```sh
 # git (manual)
-git clone https://github.com/lumaXs/lumaxs.nvim \
+git clone https://github.com/emersonbernardini/lumaxs.nvim \
   ~/.local/share/nvim/site/pack/themes/start/lumaxs.nvim
 ```
 
@@ -280,7 +280,7 @@ require("lumaxs").load("mytheme")
 
 ## License
 
-MIT © [Emerson Bernardini](https://github.com/lumaXs) — see [LICENSE](LICENSE)
+MIT © [Emerson Bernardini](https://github.com/emersonbernardini) — see [LICENSE](LICENSE)
 
 ---
 

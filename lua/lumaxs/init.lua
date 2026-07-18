@@ -73,6 +73,26 @@ local function normalize(p)
 end
 
 --[[
+  Lists available themes by scanning the runtimepath for colors/lumaxs-*.lua.
+  Computed lazily (only when :LumaxsThemes or completion actually runs),
+  instead of once eagerly on every require("lumaxs").
+]]
+local function get_themes()
+	local result = {}
+	local seen = {}
+	local rtp = vim.api.nvim_get_runtime_file("colors/lumaxs-*.lua", true)
+	for _, path in ipairs(rtp) do
+		local name = path:match("lumaxs%-(.+)%.lua$")
+		if name and not seen[name] then
+			seen[name] = true
+			table.insert(result, name)
+		end
+	end
+	table.sort(result)
+	return result
+end
+
+--[[
   Loads a theme by name (e.g. "glacier", "ember", "noturne", etc.).
   When called without an argument, loads glacier and registers the colorscheme
   as "lumaxs" (keeping consistency with the entry file name).
@@ -95,11 +115,6 @@ function M.load(name)
 
 	local c = normalize(palette)
 
-	vim.cmd("hi clear")
-	if vim.fn.exists("syntax_on") == 1 then
-		vim.cmd("syntax reset")
-	end
-
 	vim.o.termguicolors = true
 	-- When loaded via :colorscheme lumaxs (no argument), preserves
 	-- the name "lumaxs" so theme-detection plugins can find it.
@@ -115,32 +130,15 @@ function M.load(name)
 	end
 end
 
-M.themes = (function()
-	local result = {}
-	local seen = {}
-	local rtp = vim.api.nvim_get_runtime_file("colors/lumaxs-*.lua", true)
-	for _, path in ipairs(rtp) do
-		local name = path:match("lumaxs%-(.+)%.lua$")
-		if name and not seen[name] then
-			seen[name] = true
-			table.insert(result, name)
-		end
-	end
-	table.sort(result)
-	return result
-end)()
-
 vim.api.nvim_create_user_command("LumaxsThemes", function()
-	print(table.concat(require("lumaxs").themes, "\n"))
+	print(table.concat(get_themes(), "\n"))
 end, {})
 
 vim.api.nvim_create_user_command("LumaxsLoad", function(opts)
 	require("lumaxs").load(opts.args)
 end, {
 	nargs = 1,
-	complete = function()
-		return require("lumaxs").themes
-	end,
+	complete = get_themes,
 })
 
 return M

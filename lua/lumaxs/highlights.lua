@@ -1,13 +1,49 @@
 --[[
     All highlight groups — a single copy shared across all themes.
-    Receives the normalized palette via M.apply(c).
+    Receives the normalized palette via M.apply(c, styles).
+    styles controls italic / bold / underline (see init defaults).
 ]]
 
 local M = {}
 
-function M.apply(c)
-	local function hi(group, opts)
-		vim.api.nvim_set_hl(0, group, opts)
+--- Strip italic/bold/underline from opts according to styles config and category.
+--- category is one of the keys under styles.italics / .bold / .underline (or "other").
+function M.filter_styles(opts, styles, category)
+	if not opts or not styles then
+		return opts
+	end
+	category = category or "other"
+	local it = styles.italics or {}
+	local bd = styles.bold or {}
+	local ul = styles.underline or {}
+
+	local function allowed(tbl)
+		if tbl.global == false then
+			return false
+		end
+		if tbl[category] == false then
+			return false
+		end
+		return true
+	end
+
+	if opts.italic and not allowed(it) then
+		opts.italic = nil
+	end
+	if opts.bold and not allowed(bd) then
+		opts.bold = nil
+	end
+	if opts.underline and not allowed(ul) then
+		opts.underline = nil
+	end
+	return opts
+end
+
+function M.apply(c, styles)
+	styles = styles or {}
+
+	local function hi(group, opts, category)
+		vim.api.nvim_set_hl(0, group, M.filter_styles(opts, styles, category))
 	end
 
 	-- [[ EDITOR UI ]] --
@@ -17,7 +53,7 @@ function M.apply(c)
 	hi("NormalNC", { fg = c.fg_muted, bg = c.bg })
 	hi("NormalSB", { fg = c.fg, bg = c.surface })
 	hi("FloatBorder", { fg = c.float_border, bg = c.float_bg })
-	hi("FloatTitle", { fg = c.accent, bg = c.float_bg, bold = true })
+	hi("FloatTitle", { fg = c.accent, bg = c.float_bg, bold = true }, "ui")
 	hi("FloatFooter", { fg = c.fg_muted, bg = c.float_bg })
 	hi("FloatShadow", { bg = c.bg })
 	hi("FloatShadowThrough", { bg = c.bg })
@@ -27,7 +63,7 @@ function M.apply(c)
 	hi("ColorColumn", { bg = c.line })
 	hi("CursorLine", { bg = c.line })
 	hi("CursorColumn", { bg = c.line })
-	hi("CursorLineNr", { fg = c.line_nr_active, bg = c.line, bold = true })
+	hi("CursorLineNr", { fg = c.line_nr_active, bg = c.line, bold = true }, "ui")
 	hi("LineNr", { fg = c.line_nr })
 	hi("LineNrAbove", { fg = c.line_nr })
 	hi("LineNrBelow", { fg = c.line_nr })
@@ -45,8 +81,8 @@ function M.apply(c)
 	hi("Visual", { bg = c.bg_active })
 	hi("VisualNOS", { bg = c.bg_active })
 	hi("Search", { fg = c.bg, bg = c.accent })
-	hi("IncSearch", { fg = c.bg, bg = c.keyword, bold = true })
-	hi("CurSearch", { fg = c.bg, bg = c.keyword, bold = true })
+	hi("IncSearch", { fg = c.bg, bg = c.keyword, bold = true }, "ui")
+	hi("CurSearch", { fg = c.bg, bg = c.keyword, bold = true }, "ui")
 	hi("Substitute", { fg = c.bg, bg = c.type_ })
 	hi("QuickFixLine", { bg = c.bg_active })
 
@@ -61,7 +97,7 @@ function M.apply(c)
 	hi("StatusLineTermNC", { fg = c.fg_muted, bg = c.bg_dark })
 
 	hi("TabLine", { fg = c.fg_muted, bg = c.bg_dark })
-	hi("TabLineSel", { fg = c.fg, bg = c.bg, bold = true })
+	hi("TabLineSel", { fg = c.fg, bg = c.bg, bold = true }, "ui")
 	hi("TabLineFill", { bg = c.bg_dark })
 
 	hi("WinBar", { fg = c.fg, bg = c.bg })
@@ -70,11 +106,11 @@ function M.apply(c)
 	-- [[ POPUP MENU ]] --
 
 	hi("Pmenu", { fg = c.fg, bg = c.float_bg })
-	hi("PmenuSel", { fg = c.fg, bg = c.bg_active, bold = true })
+	hi("PmenuSel", { fg = c.fg, bg = c.bg_active, bold = true }, "ui")
 	hi("PmenuSbar", { bg = c.bg_dark })
 	hi("PmenuThumb", { bg = c.border_focus })
-	hi("PmenuMatch", { fg = c.string, bold = true })
-	hi("PmenuMatchSel", { fg = c.string, bg = c.bg_active, bold = true })
+	hi("PmenuMatch", { fg = c.string, bold = true }, "ui")
+	hi("PmenuMatchSel", { fg = c.string, bg = c.bg_active, bold = true }, "ui")
 	hi("PmenuKind", { fg = c.accent, bg = c.float_bg })
 	hi("PmenuKindSel", { fg = c.accent, bg = c.bg_active })
 	hi("PmenuExtra", { fg = c.fg_muted, bg = c.float_bg })
@@ -82,17 +118,17 @@ function M.apply(c)
 
 	-- [[ MISC UI ]] --
 
-	hi("Folded", { fg = c.fg_muted, bg = c.bg_active, italic = true })
+	hi("Folded", { fg = c.fg_muted, bg = c.bg_active, italic = true }, "other")
 	hi("Conceal", { fg = c.fg_muted })
 	hi("NonText", { fg = c.fg_disabled })
 	hi("SpecialKey", { fg = c.fg_subtle })
 	hi("Whitespace", { fg = c.fg_disabled })
 	hi("EndOfBuffer", { fg = c.bg })
-	hi("MatchParen", { fg = c.accent, bg = c.bg_active, bold = true, underline = true })
-	hi("Title", { fg = c.accent, bold = true })
+	hi("MatchParen", { fg = c.accent, bg = c.bg_active, bold = true, underline = true }, "other")
+	hi("Title", { fg = c.accent, bold = true }, "headings")
 	hi("Directory", { fg = c.func })
 
-	hi("ModeMsg", { fg = c.fg, bold = true })
+	hi("ModeMsg", { fg = c.fg, bold = true }, "ui")
 	hi("MsgArea", { fg = c.fg })
 	hi("MsgSeparator", { fg = c.border })
 	hi("MoreMsg", { fg = c.ok })
@@ -112,7 +148,7 @@ function M.apply(c)
 	hi("DiffAdd", { fg = c.diff_add, bg = c.diff_add_bg })
 	hi("DiffChange", { fg = c.diff_chg, bg = c.diff_chg_bg })
 	hi("DiffDelete", { fg = c.diff_del, bg = c.diff_del_bg })
-	hi("DiffText", { fg = c.fg, bg = c.diff_chg_bg, bold = true })
+	hi("DiffText", { fg = c.fg, bg = c.diff_chg_bg, bold = true }, "other")
 	hi("Added", { fg = c.diff_add })
 	hi("Removed", { fg = c.diff_del })
 	hi("Changed", { fg = c.diff_chg })
@@ -131,13 +167,13 @@ function M.apply(c)
 	hi("DiagnosticUnderlineWarn", { sp = c.warn, undercurl = true })
 	hi("DiagnosticUnderlineInfo", { sp = c.info, undercurl = true })
 	hi("DiagnosticUnderlineHint", { sp = c.hint, undercurl = true })
-	hi("DiagnosticUnderlineOk", { sp = c.ok, underline = true })
+	hi("DiagnosticUnderlineOk", { sp = c.ok, underline = true }, "diagnostics")
 
-	hi("DiagnosticVirtualTextError", { fg = c.error, bg = c.vt_err, italic = true })
-	hi("DiagnosticVirtualTextWarn", { fg = c.warn, bg = c.vt_warn, italic = true })
-	hi("DiagnosticVirtualTextInfo", { fg = c.info, bg = c.vt_info, italic = true })
-	hi("DiagnosticVirtualTextHint", { fg = c.hint, bg = c.vt_hint, italic = true })
-	hi("DiagnosticVirtualTextOk", { fg = c.ok, bg = c.bg, italic = true })
+	hi("DiagnosticVirtualTextError", { fg = c.error, bg = c.vt_err, italic = true }, "diagnostics")
+	hi("DiagnosticVirtualTextWarn", { fg = c.warn, bg = c.vt_warn, italic = true }, "diagnostics")
+	hi("DiagnosticVirtualTextInfo", { fg = c.info, bg = c.vt_info, italic = true }, "diagnostics")
+	hi("DiagnosticVirtualTextHint", { fg = c.hint, bg = c.vt_hint, italic = true }, "diagnostics")
+	hi("DiagnosticVirtualTextOk", { fg = c.ok, bg = c.bg, italic = true }, "diagnostics")
 
 	hi("DiagnosticSignError", { fg = c.error })
 	hi("DiagnosticSignWarn", { fg = c.warn })
@@ -156,20 +192,20 @@ function M.apply(c)
 	hi("LspReferenceText", { bg = c.line })
 	hi("LspReferenceRead", { bg = c.vt_info })
 	hi("LspReferenceWrite", { bg = c.bg_active })
-	hi("LspInlayHint", { fg = c.hint, bg = c.float_bg, italic = true })
-	hi("LspCodeLens", { fg = c.hint, italic = true })
+	hi("LspInlayHint", { fg = c.hint, bg = c.float_bg, italic = true }, "lsp")
+	hi("LspCodeLens", { fg = c.hint, italic = true }, "lsp")
 	hi("LspCodeLensSeparator", { fg = c.border_focus })
-	hi("LspSignatureActiveParameter", { fg = c.warn, bold = true })
+	hi("LspSignatureActiveParameter", { fg = c.warn, bold = true }, "other")
 	hi("LspInfoBorder", { fg = c.float_border, bg = c.float_bg })
 	hi("LspInfoFiletype", { fg = c.type_ })
-	hi("LspInfoTip", { fg = c.fg_muted, italic = true })
-	hi("LspInfoTitle", { fg = c.accent, bold = true })
+	hi("LspInfoTip", { fg = c.fg_muted, italic = true }, "lsp")
+	hi("LspInfoTitle", { fg = c.accent, bold = true }, "ui")
 	hi("LspInfoList", { fg = c.fg })
 
 	-- [[ CLASSIC SYNTAX (vim) ]] --
 
-	hi("Comment", { fg = c.comment, italic = true })
-	hi("SpecialComment", { fg = c.comment, bold = true })
+	hi("Comment", { fg = c.comment, italic = true }, "comments")
+	hi("SpecialComment", { fg = c.comment, bold = true }, "comments")
 	hi("Constant", { fg = c.constant })
 	hi("String", { fg = c.string })
 	hi("Character", { fg = c.string })
@@ -199,20 +235,20 @@ function M.apply(c)
 	hi("Tag", { fg = c.keyword })
 	hi("Delimiter", { fg = c.punct })
 	hi("Debug", { fg = c.warn })
-	hi("Underlined", { fg = c.accent, underline = true })
+	hi("Underlined", { fg = c.accent, underline = true }, "links")
 	hi("Ignore", { fg = c.fg_disabled })
 	hi("Error", { fg = c.error })
-	hi("Todo", { fg = c.bg, bg = c.keyword, bold = true })
+	hi("Todo", { fg = c.bg, bg = c.keyword, bold = true }, "other")
 
 	-- [[ TREESITTER ]] --
 
 	-- comments
-	hi("@comment", { fg = c.comment, italic = true })
-	hi("@comment.documentation", { fg = c.comment_doc, bold = true, italic = true })
-	hi("@comment.error", { fg = c.error, italic = true })
-	hi("@comment.warning", { fg = c.warn, italic = true })
-	hi("@comment.note", { fg = c.info, italic = true })
-	hi("@comment.todo", { fg = c.bg, bg = c.keyword, bold = true })
+	hi("@comment", { fg = c.comment, italic = true }, "comments")
+	hi("@comment.documentation", { fg = c.comment_doc, bold = true, italic = true }, "comments")
+	hi("@comment.error", { fg = c.error, italic = true }, "comments")
+	hi("@comment.warning", { fg = c.warn, italic = true }, "comments")
+	hi("@comment.note", { fg = c.info, italic = true }, "comments")
+	hi("@comment.todo", { fg = c.bg, bg = c.keyword, bold = true }, "comments")
 
 	-- keywords
 	hi("@keyword", { fg = c.keyword })
@@ -235,7 +271,7 @@ function M.apply(c)
 
 	-- functions
 	hi("@function", { fg = c.func })
-	hi("@function.builtin", { fg = c.func, italic = true })
+	hi("@function.builtin", { fg = c.func, italic = true }, "functions")
 	hi("@function.call", { fg = c.func })
 	hi("@function.macro", { fg = c.type_ })
 	hi("@function.method", { fg = c.func })
@@ -244,14 +280,14 @@ function M.apply(c)
 
 	-- variables
 	hi("@variable", { fg = c.fg })
-	hi("@variable.builtin", { fg = c.keyword, italic = true })
+	hi("@variable.builtin", { fg = c.keyword, italic = true }, "variables")
 	hi("@variable.member", { fg = c.property })
 	hi("@variable.parameter", { fg = c.number })
-	hi("@variable.parameter.builtin", { fg = c.number, italic = true })
+	hi("@variable.parameter.builtin", { fg = c.number, italic = true }, "variables")
 
 	-- tipos
 	hi("@type", { fg = c.type_ })
-	hi("@type.builtin", { fg = c.type_, italic = true })
+	hi("@type.builtin", { fg = c.type_, italic = true }, "types")
 	hi("@type.definition", { fg = c.type_ })
 	hi("@type.qualifier", { fg = c.keyword })
 
@@ -260,10 +296,10 @@ function M.apply(c)
 	hi("@string.escape", { fg = c.string_esc })
 	hi("@string.special", { fg = c.string_spec })
 	hi("@string.special.symbol", { fg = c.string })
-	hi("@string.special.url", { fg = c.string_re, underline = true })
+	hi("@string.special.url", { fg = c.string_re, underline = true }, "links")
 	hi("@string.special.path", { fg = c.string_re })
 	hi("@string.regexp", { fg = c.string_re })
-	hi("@string.documentation", { fg = c.string, italic = true })
+	hi("@string.documentation", { fg = c.string, italic = true }, "strings")
 	hi("@number", { fg = c.number })
 	hi("@number.float", { fg = c.number })
 	hi("@boolean", { fg = c.number })
@@ -272,7 +308,7 @@ function M.apply(c)
 
 	-- constantes
 	hi("@constant", { fg = c.constant })
-	hi("@constant.builtin", { fg = c.keyword, italic = true })
+	hi("@constant.builtin", { fg = c.keyword, italic = true }, "keywords")
 	hi("@constant.macro", { fg = c.type_ })
 
 	-- operators & punctuation
@@ -284,40 +320,40 @@ function M.apply(c)
 
 	-- modules
 	hi("@module", { fg = c.namespace })
-	hi("@module.builtin", { fg = c.namespace, italic = true })
+	hi("@module.builtin", { fg = c.namespace, italic = true }, "keywords")
 	hi("@namespace", { fg = c.namespace })
 	hi("@label", { fg = c.accent })
 
 	-- atributos & propriedades
 	hi("@attribute", { fg = c.accent })
-	hi("@attribute.builtin", { fg = c.accent, italic = true })
+	hi("@attribute.builtin", { fg = c.accent, italic = true }, "keywords")
 	hi("@property", { fg = c.property })
 	hi("@field", { fg = c.property })
 	hi("@parameter", { fg = c.number })
 	hi("@annotation", { fg = c.type_ })
 
 	-- markup
-	hi("@markup.heading", { fg = c.accent, bold = true })
-	hi("@markup.heading.1", { fg = c.keyword, bold = true })
-	hi("@markup.heading.2", { fg = c.type_, bold = true })
-	hi("@markup.heading.3", { fg = c.func, bold = true })
-	hi("@markup.heading.4", { fg = c.string, bold = true })
-	hi("@markup.heading.5", { fg = c.number, bold = true })
-	hi("@markup.heading.6", { fg = c.operator, bold = true })
-	hi("@markup.italic", { italic = true })
-	hi("@markup.strong", { bold = true })
-	hi("@markup.bold", { bold = true })
+	hi("@markup.heading", { fg = c.accent, bold = true }, "headings")
+	hi("@markup.heading.1", { fg = c.keyword, bold = true }, "headings")
+	hi("@markup.heading.2", { fg = c.type_, bold = true }, "headings")
+	hi("@markup.heading.3", { fg = c.func, bold = true }, "headings")
+	hi("@markup.heading.4", { fg = c.string, bold = true }, "headings")
+	hi("@markup.heading.5", { fg = c.number, bold = true }, "headings")
+	hi("@markup.heading.6", { fg = c.operator, bold = true }, "headings")
+	hi("@markup.italic", { italic = true }, "markup")
+	hi("@markup.strong", { bold = true }, "markup")
+	hi("@markup.bold", { bold = true }, "markup")
 	hi("@markup.strikethrough", { strikethrough = true })
-	hi("@markup.underline", { underline = true })
-	hi("@markup.link", { fg = c.func, underline = true })
+	hi("@markup.underline", { underline = true }, "markup")
+	hi("@markup.link", { fg = c.func, underline = true }, "links")
 	hi("@markup.link.label", { fg = c.func })
-	hi("@markup.link.url", { fg = c.string_re, underline = true })
+	hi("@markup.link.url", { fg = c.string_re, underline = true }, "links")
 	hi("@markup.raw", { fg = c.string })
 	hi("@markup.raw.block", { fg = c.string, bg = c.surface })
 	hi("@markup.list", { fg = c.punct })
 	hi("@markup.list.checked", { fg = c.ok })
 	hi("@markup.list.unchecked", { fg = c.fg_muted })
-	hi("@markup.quote", { fg = c.comment, italic = true })
+	hi("@markup.quote", { fg = c.comment, italic = true }, "markup")
 	hi("@markup.math", { fg = c.number })
 	hi("@markup.environment", { fg = c.keyword })
 	hi("@markup.environment.name", { fg = c.type_ })
@@ -329,7 +365,7 @@ function M.apply(c)
 
 	-- tags
 	hi("@tag", { fg = c.keyword })
-	hi("@tag.builtin", { fg = c.keyword, italic = true })
+	hi("@tag.builtin", { fg = c.keyword, italic = true }, "keywords")
 	hi("@tag.attribute", { fg = c.accent })
 	hi("@tag.delimiter", { fg = c.punct })
 
@@ -339,12 +375,12 @@ function M.apply(c)
 	hi("@error", { fg = c.error })
 
 	-- compat legado
-	hi("@text.strong", { bold = true })
-	hi("@text.emphasis", { italic = true })
-	hi("@text.underline", { underline = true })
+	hi("@text.strong", { bold = true }, "markup")
+	hi("@text.emphasis", { italic = true }, "markup")
+	hi("@text.underline", { underline = true }, "markup")
 	hi("@text.strike", { strikethrough = true })
-	hi("@text.title", { fg = c.accent, bold = true })
-	hi("@text.uri", { fg = c.string_re, underline = true })
+	hi("@text.title", { fg = c.accent, bold = true }, "headings")
+	hi("@text.uri", { fg = c.string_re, underline = true }, "links")
 	hi("@text.reference", { fg = c.func })
 	hi("@text.todo", { fg = c.bg, bg = c.keyword })
 	hi("@text.note", { fg = c.info })
@@ -376,23 +412,23 @@ function M.apply(c)
 	hi("@lsp.type.type", { fg = c.type_ })
 	hi("@lsp.type.typeParameter", { fg = c.type_ })
 	hi("@lsp.type.variable", { fg = c.fg })
-	hi("@lsp.type.builtinType", { fg = c.type_, italic = true })
-	hi("@lsp.type.lifetime", { fg = c.keyword, italic = true })
-	hi("@lsp.type.selfKeyword", { fg = c.keyword, italic = true })
-	hi("@lsp.type.selfTypeKeyword", { fg = c.type_, italic = true })
+	hi("@lsp.type.builtinType", { fg = c.type_, italic = true }, "types")
+	hi("@lsp.type.lifetime", { fg = c.keyword, italic = true }, "keywords")
+	hi("@lsp.type.selfKeyword", { fg = c.keyword, italic = true }, "keywords")
+	hi("@lsp.type.selfTypeKeyword", { fg = c.type_, italic = true }, "types")
 	hi("@lsp.type.escapeSequence", { fg = c.string_esc })
 	hi("@lsp.type.formatSpecifier", { fg = c.string_spec })
 	hi("@lsp.type.generic", { fg = c.type_ })
 	hi("@lsp.type.label", { fg = c.accent })
 	hi("@lsp.mod.deprecated", { strikethrough = true })
 	hi("@lsp.mod.readonly", {}) -- { fg = c.constant })
-	hi("@lsp.mod.static", { italic = true })
-	hi("@lsp.mod.abstract", { italic = true })
-	hi("@lsp.mod.async", { fg = c.keyword, italic = true })
-	hi("@lsp.mod.defaultLibrary", { italic = true })
+	hi("@lsp.mod.static", { italic = true }, "keywords")
+	hi("@lsp.mod.abstract", { italic = true }, "keywords")
+	hi("@lsp.mod.async", { fg = c.keyword, italic = true }, "keywords")
+	hi("@lsp.mod.defaultLibrary", { italic = true }, "keywords")
 	hi("@lsp.mod.documentation", { fg = c.comment_doc })
 	hi("@lsp.mod.injected", {})
-	hi("@lsp.mod.library", { italic = true })
+	hi("@lsp.mod.library", { italic = true }, "keywords")
 	hi("@lsp.mod.public", {})
 
 	-- [[ TELESCOPE ]] --
@@ -1085,6 +1121,90 @@ function M.apply(c)
 		end
 		if t.white_br then
 			vim.g.terminal_color_15 = t.white_br
+		end
+	end
+end
+
+--- Clear background on editor + common plugin groups (preserves fg and other attrs).
+function M.apply_transparent()
+	local groups = {
+		-- editor
+		"Normal",
+		"NormalNC",
+		"NormalFloat",
+		"NormalSB",
+		"FloatBorder",
+		"FloatTitle",
+		"FloatFooter",
+		"SignColumn",
+		"FoldColumn",
+		"EndOfBuffer",
+		"LineNr",
+		"LineNrAbove",
+		"LineNrBelow",
+		-- telescope
+		"TelescopeNormal",
+		"TelescopeBorder",
+		"TelescopePromptNormal",
+		"TelescopePromptBorder",
+		"TelescopeResultsNormal",
+		"TelescopeResultsBorder",
+		"TelescopePreviewNormal",
+		"TelescopePreviewBorder",
+		-- fzf-lua
+		"FzfLuaNormal",
+		"FzfLuaBorder",
+		"FzfLuaPreviewNormal",
+		"FzfLuaPreviewBorder",
+		-- nvim-tree
+		"NvimTreeNormal",
+		"NvimTreeNormalNC",
+		"NvimTreeEndOfBuffer",
+		"NvimTreeWinSeparator",
+		"NvimTreeStatusLine",
+		"NvimTreeStatusLineNC",
+		-- neo-tree
+		"NeoTreeNormal",
+		"NeoTreeNormalNC",
+		"NeoTreeFloatBorder",
+		"NeoTreeStatusLine",
+		-- snacks
+		"SnacksNormal",
+		"SnacksNormalNC",
+		"SnacksBorder",
+		"SnacksBackdrop",
+		"SnacksInputNormal",
+		"SnacksInputBorder",
+		"SnacksExplorer",
+		"SnacksExplorerNormal",
+		-- others
+		"LazyNormal",
+		"LazyBorder",
+		"MasonNormal",
+		"TroubleNormal",
+		"TroubleNormalNC",
+		"AerialNormal",
+		"AerialNormalNC",
+		"WhichKeyFloat",
+		"WhichKeyBorder",
+		"NotifyBackground",
+		"MiniFilesNormal",
+		"MiniFilesBorder",
+		"MiniPickNormal",
+		"MiniPickBorder",
+		"MiniNotifyNormal",
+		"MiniNotifyBorder",
+		"NoicePopup",
+		"NoicePopupBorder",
+		"NoiceCmdlinePopup",
+		"NoiceCmdlinePopupBorder",
+	}
+
+	for _, group in ipairs(groups) do
+		local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group, link = false })
+		if ok and hl and next(hl) ~= nil then
+			hl.bg = nil
+			vim.api.nvim_set_hl(0, group, hl)
 		end
 	end
 end

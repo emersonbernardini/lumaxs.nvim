@@ -88,6 +88,10 @@
   lazy = false,
   priority = 1000,
   config = function()
+    require("lumaxs").setup({
+      -- transparent = true,                        -- clear backgrounds
+      -- styles = { italics = { global = false } }, -- disable all italics
+    })
     vim.cmd.colorscheme("lumaxs-glacier")
   end,
 }
@@ -146,6 +150,104 @@ require("lumaxs").load("cinder")
 
 -- Inside init.lua / lazy config
 vim.cmd.colorscheme("lumaxs-noturne")
+```
+
+### Transparent background
+
+Disabled by default. Enable with:
+
+```lua
+require("lumaxs").setup({
+  transparent = true,
+})
+vim.cmd.colorscheme("lumaxs-glacier")
+```
+
+Clears `bg` on editor groups (`Normal`, `NormalFloat`, `SignColumn`, …) and common plugins (Telescope, Snacks, NvimTree, Neo-tree, Lazy, Mason, Trouble, etc.) while keeping foreground and other attributes.
+
+### Styles (italic / bold / underline)
+
+All styles are **enabled by default**. Only set a key to `false` to disable.
+
+```lua
+require("lumaxs").setup({
+  styles = {
+    -- Master switches (disable the attribute everywhere)
+    italics = {
+      global = true,          -- false → no italics at all
+      comments = true,        -- Comment, @comment*, docs, blame, ghost text…
+      keywords = true,        -- builtins, self, static, library, tags…
+      functions = true,       -- @function.builtin
+      variables = true,       -- @variable.builtin, parameters
+      types = true,           -- @type.builtin, selfTypeKeyword
+      strings = true,         -- @string.documentation
+      markup = true,          -- @markup.italic / quote / emphasis
+      diagnostics = true,     -- DiagnosticVirtualText*
+      lsp = true,             -- InlayHint, CodeLens, LspInfoTip
+      other = true,           -- Folded, footers, remaining plugins
+    },
+    bold = {
+      global = true,
+      comments = true,        -- SpecialComment, @comment.documentation
+      keywords = true,
+      functions = true,
+      headings = true,        -- Title, @markup.heading*, RenderMarkdownH*
+      ui = true,              -- TabLineSel, FloatTitle, Search, Pmenu, statuslines…
+      other = true,
+    },
+    underline = {
+      global = true,
+      links = true,           -- Underlined, @markup.link, urls
+      diagnostics = true,     -- DiagnosticUnderlineOk
+      other = true,           -- MatchParen, etc.
+    },
+  },
+})
+
+-- Then load a theme
+vim.cmd.colorscheme("lumaxs-glacier")
+```
+
+**Examples**
+
+```lua
+-- Disable all italics
+require("lumaxs").setup({ styles = { italics = { global = false } } })
+
+-- Keep italics only for comments
+require("lumaxs").setup({
+  styles = {
+    italics = {
+      comments = true,
+      keywords = false,
+      functions = false,
+      variables = false,
+      types = false,
+      strings = false,
+      markup = false,
+      diagnostics = false,
+      lsp = false,
+      other = false,
+    },
+  },
+})
+
+-- No bold in UI chrome
+require("lumaxs").setup({ styles = { bold = { ui = false } } })
+```
+
+Call `setup` **before** `load` / `colorscheme`.
+
+### Full example (transparent + no italics)
+
+```lua
+require("lumaxs").setup({
+  transparent = true,
+  styles = {
+    italics = { global = false },
+  },
+})
+vim.cmd.colorscheme("lumaxs-tundra")
 ```
 
 ---

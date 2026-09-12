@@ -1,6 +1,66 @@
 local M = {}
 
 --[[
+  Default configuration.
+  styles.*.global = false disables the attribute everywhere.
+  styles.*.<category> = false disables only for that category.
+  Everything defaults to true; only explicit false disables.
+]]
+local defaults = {
+	-- transparent = true clears background on editor + common plugin groups
+	transparent = false,
+	styles = {
+		italics = {
+			global = true,
+			comments = true,
+			keywords = true,
+			functions = true,
+			variables = true,
+			types = true,
+			strings = true,
+			markup = true,
+			diagnostics = true,
+			lsp = true,
+			other = true,
+		},
+		bold = {
+			global = true,
+			comments = true,
+			keywords = true,
+			functions = true,
+			headings = true,
+			ui = true,
+			other = true,
+		},
+		underline = {
+			global = true,
+			links = true,
+			diagnostics = true,
+			other = true,
+		},
+	},
+}
+
+M.config = vim.deepcopy(defaults)
+
+--- Merge user options into config (deep for styles).
+function M.setup(opts)
+	opts = opts or {}
+	if opts.transparent ~= nil then
+		M.config.transparent = opts.transparent
+	end
+	if opts.styles then
+		for kind, sub in pairs(opts.styles) do
+			if type(sub) == "table" and M.config.styles[kind] then
+				for k, v in pairs(sub) do
+					M.config.styles[kind][k] = v
+				end
+			end
+		end
+	end
+end
+
+--[[
   Fills missing palette keys with sensible fallbacks.
   Each palette only needs to define what is unique — the rest comes from here.
 ]]
@@ -120,13 +180,19 @@ function M.load(name)
 	-- the name "lumaxs" so theme-detection plugins can find it.
 	vim.g.colors_name = is_default_entry and "lumaxs" or ("lumaxs-" .. name)
 
-	require("lumaxs.highlights").apply(c)
+	local styles = M.config.styles
+	require("lumaxs.highlights").apply(c, styles)
 
-	-- Apply palette overrides, if defined
+	-- Apply palette overrides, if defined (also filtered by styles)
 	if type(c.overrides) == "function" then
+		local filter = require("lumaxs.highlights").filter_styles
 		for group, opts in pairs(c.overrides(c)) do
-			vim.api.nvim_set_hl(0, group, opts)
+			vim.api.nvim_set_hl(0, group, filter(opts, styles, "other"))
 		end
+	end
+
+	if M.config.transparent then
+		require("lumaxs.highlights").apply_transparent()
 	end
 end
 

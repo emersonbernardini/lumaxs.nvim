@@ -5,8 +5,8 @@ return {
     -- ── Required ───────────────────────────────────────────────────────────
     bg       = "#070c12", -- unificado com o antigo panel.background
     fg       = "#b8ccd8",
-    keyword  = "#4a9ab8", -- cor original do Glacier, mantida
-    func     = "#156a79", -- mais escuro/saturado que o keyword, de propósito
+    keyword  = "#156a79", -- cor original do Glacier, mantida
+    func     = "#7bb6cb", -- mais escuro/saturado que o keyword, de propósito
     type_    = "#88ddd7",
     string   = "#4b9b62", -- família verde-musgo, âncora #30503a
     number   = "#5eba74",

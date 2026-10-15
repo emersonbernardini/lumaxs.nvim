@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://placehold.co/800x200/0f1012/c8cdd8?text=lumaxs.nvim&font=monospace" alt="lumaxs.nvim" width="800" />
+<img src="assets/showcase.png" alt="lumaxs.nvim" width="800" />
 
 # lumaxs.nvim
 
